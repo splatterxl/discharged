@@ -12,6 +12,7 @@ futures-util = "*"
 log = "*"
 env_logger = "*"
 serde_json = "*"
+ansi_term = "*"
 
 [dependencies.tokio]
 version = "*"

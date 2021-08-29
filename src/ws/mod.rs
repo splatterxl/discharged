@@ -6,13 +6,17 @@ use tokio_tungstenite::tungstenite::{
 	Message,
 };
 
+use crate::ws::client::WebSocketClient;
+
+pub mod client;
+
 pub fn validate(_message: String) {}
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WebSocketMessage {
+pub struct WebSocketMessage<T> {
 	pub t: u8,
 	pub e: Option<u8>,
-	pub d: Option<WebSocketMessageData>,
+	pub d: Option<T>,
 	pub n: usize,
 	pub s: Option<String>,
 }
@@ -22,10 +26,6 @@ pub struct WebSocketSessionGrant {
 	session_id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum WebSocketMessageData {
-	SessionGrant(WebSocketSessionGrant),
-}
 
 pub async unsafe fn accept_connection(stream: TcpStream) {
 	let addr = stream
@@ -37,16 +37,18 @@ pub async unsafe fn accept_connection(stream: TcpStream) {
 		.await
 		.expect("Error during the websocket handshake occurred");
 
-	println!("New WebSocket connection: {}", addr);
+	println!("{}: WebSocket connection succeeded", &addr);
 
-	let (mut write, _read) = ws_stream.split();
+	let (mut write, read) = ws_stream.split();
+
+    let session_id = "uwu".to_string();
 
 	let session_grant_json = &WebSocketMessage {
 		t: 0,
 		e: None,
-		d: Some(WebSocketMessageData::SessionGrant(WebSocketSessionGrant {
-			session_id: "uwu".to_string(),
-		})),
+		d: Some(WebSocketSessionGrant {
+			session_id: session_id.clone()
+		}),
 		n: 0,
 		s: None,
 	};
@@ -68,6 +70,8 @@ pub async unsafe fn accept_connection(stream: TcpStream) {
 			.await
 			.expect("couldn't send session grant");
 
-		println!("Sent session grant: {:#?}", session_grant_json);
+		println!("{}: session {} granted", &addr, &session_id);
+
+        WebSocketClient::new((write, read), session_id, addr);
 	}
 }
