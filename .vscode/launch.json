@@ -1,0 +1,16 @@
+{
+	"configurations": [
+		{
+			"command": "cargo run",
+			"name": "Run",
+			"type": "node-terminal",
+			"request": "launch"
+		},
+		{
+			"command": "cargo run --release",
+			"name": "Run (Release)",
+			"type": "node-terminal",
+			"request": "launch"
+		}
+	]
+}

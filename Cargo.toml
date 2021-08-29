@@ -1,0 +1,22 @@
+[package]
+name = "discharged"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio-tungstenite = "*"
+futures-util = "*"
+log = "*"
+env_logger = "*"
+serde_json = "*"
+
+[dependencies.tokio]
+version = "*"
+features = ["full"]
+
+[dependencies.serde]
+version = "*"
+features = ["derive"]
