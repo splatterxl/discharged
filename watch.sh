@@ -13,7 +13,7 @@ watch_src() {
 echo Starting...
 echo
 
-cargo run
+cargo run || echo -n
 
 echo "
 ------ Exited with code $? ------"

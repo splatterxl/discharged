@@ -1,6 +1,7 @@
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string, Value};
+use std::borrow::Cow;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::{
 	protocol::{frame::coding::CloseCode, CloseFrame},
@@ -34,10 +35,15 @@ pub struct WebSocketHello {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WebSocketSession {
-    session_token: String,
+	session_token: String,
 }
 
-pub async unsafe fn accept_connection(stream: TcpStream) {
+pub const DEFAULT_CLOSE_FRAME: CloseFrame = CloseFrame {
+	code: CloseCode::Library(1001),
+	reason: Cow::Borrowed("Unknown Error"),
+};
+
+pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
 
 	if addr.is_err() {
@@ -61,7 +67,7 @@ pub async unsafe fn accept_connection(stream: TcpStream) {
 		t: 0,
 		e: None,
 		d: Some(WebSocketHello {
-			exchange_interval: 1000 * 60 * 3,
+			exchange_interval: 60106,
 		}),
 		n: 0,
 		s: None,
@@ -70,11 +76,9 @@ pub async unsafe fn accept_connection(stream: TcpStream) {
 	let hello = to_string(hello_json).unwrap_or(String::from("null"));
 
 	if hello == "null" {
+		println!("{}: couldn't stringify hello", addr);
 		write
-			.send(Message::Close(Some(CloseFrame {
-				code: CloseCode::Library(1001),
-				reason: std::borrow::Cow::Borrowed("Unknown Error"),
-			})))
+			.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 			.await
 			.expect("couldn't close");
 		return;
@@ -84,31 +88,63 @@ pub async unsafe fn accept_connection(stream: TcpStream) {
 			.await
 			.expect("couldn't send HELLO");
 
-		if let Some(Ok(Message::Text(msg))) = read.next().await {
-            let msg = from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str());
-
-            if msg.is_err() {
-                write.send(Message::Close(None)).await.expect("couldn't close socket");
-                return;
+		if let Some(Ok(mut msg)) = read.next().await {
+            if let Message::Binary(bin) = msg {
+                msg = Message::Text(String::from_utf8(bin).unwrap_or(String::from("")));
             }
+            dbg!(&msg);
+			match msg {
+				Message::Text(mut msg) => {
+                    msg = String::from(msg.trim());
 
-            let msg = msg.unwrap();
+					let msg = from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str());
 
-            let mut session_token = String::from("");
+					if msg.is_err() {
+						println!("{}: invalid opening packet", addr);
+						write
+							.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+							.await
+							.expect("couldn't close socket");
+						return;
+					}
 
-            &session_token;
+					let msg = msg.unwrap();
 
-            if let Some(data) = msg.d {
-                session_token = data.session_token;
-            } else {
-                write.send(Message::Close(None)).await.expect("couldn't close socket");
-                return;
-            }
-			println!("{}: session token {} received, validating...", &addr, &session_token);
+					let mut session_token = String::from("");
 
-            println!("{}: session token validated", &addr);
+					&session_token;
 
-			WebSocketClient::new((write, read), session_token, addr);
+					if let Some(data) = msg.d {
+						session_token = data.session_token;
+					} else {
+						println!("{}: invalid opening packet", addr);
+						write
+							.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+							.await
+							.expect("couldn't close socket");
+						return;
+					}
+					println!(
+						"{}: session token {} received, validating...",
+						&addr, &session_token
+					);
+
+					println!("{}: session token validated", &addr);
+
+					WebSocketClient::new((write, read), session_token, addr);
+				}
+				_ => {
+					write
+						.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+						.await
+						.unwrap_or(());
+				}
+			}
+		} else {
+			write
+				.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+				.await
+				.unwrap_or(());
 		}
 	}
 }
