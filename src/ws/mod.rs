@@ -1,16 +1,21 @@
 use futures_util::{SinkExt, StreamExt};
-use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string, Value};
-use std::borrow::Cow;
 use tokio::net::TcpStream;
-use tokio_tungstenite::tungstenite::{
-	protocol::{frame::coding::CloseCode, CloseFrame},
-	Message,
+use tokio_tungstenite::tungstenite::Message;
+
+use crate::ws::{
+	client::WebSocketClient,
+	errors::DEFAULT_CLOSE_FRAME,
+	schemas::{
+		dispatches::Hello,
+		gen::{dispatch, hello},
+		WebSocketMessage, WebSocketSession,
+	},
 };
 
-use crate::ws::client::WebSocketClient;
-
 pub mod client;
+pub mod errors;
+pub mod schemas;
 
 pub fn validate(message: String) -> Result<(), ()> {
 	match from_str::<WebSocketMessage<Value>>(message.as_str()) {
@@ -18,30 +23,6 @@ pub fn validate(message: String) -> Result<(), ()> {
 		Err(_) => Err(()),
 	}
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WebSocketMessage<T> {
-	pub t: u8,
-	pub e: Option<u8>,
-	pub d: Option<T>,
-	pub n: usize,
-	pub s: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WebSocketHello {
-	exchange_interval: u16,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WebSocketSession {
-	session_token: String,
-}
-
-pub const DEFAULT_CLOSE_FRAME: CloseFrame = CloseFrame {
-	code: CloseCode::Library(1001),
-	reason: Cow::Borrowed("Unknown Error"),
-};
 
 pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
@@ -63,17 +44,8 @@ pub async fn accept_connection(stream: TcpStream) {
 
 	let (mut write, mut read) = ws_stream.split();
 
-	let hello_json = &WebSocketMessage {
-		t: 0,
-		e: None,
-		d: Some(WebSocketHello {
-			exchange_interval: 60106,
-		}),
-		n: 0,
-		s: None,
-	};
-
-	let hello = to_string(hello_json).unwrap_or(String::from("null"));
+	let hello =
+		to_string(&dispatch::<Hello>(Some(hello()), 0, None, 0)).unwrap_or(String::from("null"));
 
 	if hello == "null" {
 		println!("{}: couldn't stringify hello", addr);
@@ -89,13 +61,13 @@ pub async fn accept_connection(stream: TcpStream) {
 			.expect("couldn't send HELLO");
 
 		if let Some(Ok(mut msg)) = read.next().await {
-            if let Message::Binary(bin) = msg {
-                msg = Message::Text(String::from_utf8(bin).unwrap_or(String::from("")));
-            }
-            dbg!(&msg);
+			if let Message::Binary(bin) = msg {
+				msg = Message::Text(String::from_utf8(bin).unwrap_or(String::from("")));
+			}
+
 			match msg {
 				Message::Text(mut msg) => {
-                    msg = String::from(msg.trim());
+					msg = String::from(msg.trim());
 
 					let msg = from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str());
 
@@ -131,7 +103,7 @@ pub async fn accept_connection(stream: TcpStream) {
 
 					println!("{}: session token validated", &addr);
 
-					WebSocketClient::new((write, read), session_token, addr);
+					WebSocketClient::new((write, read), session_token, addr).await;
 				}
 				_ => {
 					write
