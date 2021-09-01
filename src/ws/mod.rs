@@ -1,11 +1,12 @@
 use futures_util::{SinkExt, StreamExt};
-use serde_json::{from_str, to_string, Value};
+use serde::Deserialize;
+use serde_json::{from_str, to_string};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::Message;
 
 use crate::ws::{
 	client::WebSocketClient,
-	errors::DEFAULT_CLOSE_FRAME,
+	errors::{DEFAULT_CLOSE_FRAME, PARSE_ERROR},
 	schemas::{
 		dispatches::Hello,
 		gen::{dispatch, hello},
@@ -13,17 +14,29 @@ use crate::ws::{
 	},
 };
 
+use self::schemas::constants::Opcodes;
+
 pub mod client;
 pub mod errors;
 pub mod schemas;
 
-pub fn validate(message: String) -> Result<(), ()> {
-	match from_str::<WebSocketMessage<Value>>(message.as_str()) {
-		Ok(_) => Ok(()),
-		Err(_) => Err(()),
-	}
-}
+pub fn validate<'a, T>(message: &'a String) -> Result<(), ()>
+where
+	T: Deserialize<'a>,
+{
+	let obj = from_str::<'a, WebSocketMessage<T>>(message.as_str());
+    let opcode = if obj.is_ok() {
+        Opcodes::get(obj.as_ref().unwrap().t)
+    } else {
+        Err(String::new())
+    };
 
+    if obj.is_err() || opcode.is_err() {
+        Err(())
+    } else {
+        Ok(())
+    }
+}
 pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
 
@@ -69,18 +82,16 @@ pub async fn accept_connection(stream: TcpStream) {
 				Message::Text(mut msg) => {
 					msg = String::from(msg.trim());
 
-					let msg = from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str());
-
-					if msg.is_err() {
+					if validate::<WebSocketSession>(&msg).is_err() {
 						println!("{}: invalid opening packet", addr);
 						write
-							.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
 							.expect("couldn't close socket");
 						return;
 					}
-
-					let msg = msg.unwrap();
+					
+                    let msg = from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str()).unwrap();
 
 					let mut session_token = String::from("");
 
@@ -91,13 +102,13 @@ pub async fn accept_connection(stream: TcpStream) {
 					} else {
 						println!("{}: invalid opening packet", addr);
 						write
-							.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
 							.expect("couldn't close socket");
 						return;
 					}
 					println!(
-						"{}: session token {} received, validating...",
+						"{}: session token \"{}\" received, validating...",
 						&addr, &session_token
 					);
 

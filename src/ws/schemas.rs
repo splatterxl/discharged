@@ -68,3 +68,30 @@ pub mod gen {
 		Greetings { user }
 	}
 }
+
+pub mod constants {
+    pub enum Opcodes {
+        Hello,
+        Greetings
+    }
+
+    impl Opcodes {
+        pub fn hello() -> u8 {
+            0
+        }
+
+        pub fn greetings() -> u8 {
+            1
+        }
+
+        ////////////////////////////
+
+        pub fn get(num: u8) -> Result<Self, String> {
+            return match num {
+                0 => Ok(Self::Hello),
+                1 => Ok(Self::Greetings),
+                _ => Err(format!("Opcodes::get() called with an invalid number: {}", num))
+            };
+        }
+    }
+}
