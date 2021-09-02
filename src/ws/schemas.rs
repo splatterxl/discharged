@@ -6,13 +6,12 @@ pub struct WebSocketMessage<T> {
 	pub e: Option<u8>,
 	pub d: Option<T>,
 	pub n: usize,
-	pub s: Option<String>,
 }
 
 pub mod dispatches {
 	use serde::{Deserialize, Serialize};
 
-	use self::data_types::PartialUser;
+	use crate::types::ws::HelloUser;
 
 	#[derive(Serialize, Deserialize, Debug)]
 	pub struct Hello {
@@ -24,17 +23,6 @@ pub mod dispatches {
 	pub struct Greetings {
 		pub user: PartialUser,
 	}
-
-	pub mod data_types {
-		use serde::{Deserialize, Serialize};
-
-		#[derive(Serialize, Deserialize, Debug)]
-		pub struct PartialUser {
-			pub username: String,
-			pub nickname: String,
-			pub id: u32,
-		}
-	}
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -44,54 +32,70 @@ pub struct WebSocketSession {
 
 pub mod gen {
 	use super::{
-		dispatches::{data_types::PartialUser, Greetings, Hello},
+		dispatches::{Greetings, Hello},
 		WebSocketMessage,
 	};
 
-    pub fn dispatch<T>(data: Option<T>, t: u8, event: Option<u8>, sequence: usize) -> WebSocketMessage<T> {
-        WebSocketMessage {
-            t,
-            e: event,
-            d: data,
-            n: sequence,
-            s: None
-        }
-    }
+    use crate::types::ws::HelloUser;
 
-	pub fn hello() -> Hello {
-			Hello {
-				exchange_interval: 60106,
-			}
+	pub fn dispatch<T>(
+		data: Option<T>,
+		t: u8,
+		event: Option<u8>,
+		sequence: usize,
+	) -> WebSocketMessage<T> {
+		WebSocketMessage {
+			t,
+			e: event,
+			d: data,
+			n: sequence,
+		}
 	}
 
-	pub fn greetings(user: PartialUser) -> Greetings {
+	pub fn hello() -> Hello {
+		Hello {
+			exchange_interval: 60106,
+		}
+	}
+
+	pub fn greetings(user: HelloUser) -> Greetings {
 		Greetings { user }
 	}
 }
 
 pub mod constants {
-    pub enum Opcodes {
-        Hello,
-        Greetings
-    }
+    #[derive(Debug)]
+	pub enum Opcodes {
+		Hello,
+		Greetings,
+		Authenticate,
+	}
 
-    impl Opcodes {
-        pub fn hello() -> u8 {
-            0
-        }
+	impl Opcodes {
+		pub fn hello() -> u8 {
+			0
+		}
 
-        pub fn greetings() -> u8 {
-            1
-        }
+		pub fn greetings() -> u8 {
+			1
+		}
 
-        ////////////////////////////
+		pub fn authenticate() -> u8 {
+			2
+		}
 
-        pub fn get(num: u8) -> Result<Self, String> {
-            return match num {
-                0 => Ok(Self::Hello),
-                1 => Ok(Self::Greetings),
-                _ => Err(format!("Opcodes::get() called with an invalid number: {}", num))
-            };
-        }
-    }
+		////////////////////////////
+
+		pub fn get(num: u8) -> Result<Self, String> {
+			return match num {
+				0 => Ok(Self::Hello),
+				1 => Ok(Self::Greetings),
+				2 => Ok(Self::Authenticate),
+				_ => Err(format!(
+					"Opcodes::get() called with an invalid number: {}",
+					num
+				)),
+			};
+		}
+	}
 }

@@ -10,6 +10,7 @@ publish = false
 tokio-tungstenite = "*"
 serde_json = "*"
 futures-util = "*"
+mongodb = "2.0.0-beta.3"
 
 [dependencies.tokio]
 version = "*"

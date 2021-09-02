@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
 use serde_json::{from_str, to_string};
@@ -22,20 +24,21 @@ pub mod schemas;
 
 pub fn validate<'a, T>(message: &'a String) -> Result<(), ()>
 where
-	T: Deserialize<'a>,
+	T: Deserialize<'a> + Debug,
 {
 	let obj = from_str::<'a, WebSocketMessage<T>>(message.as_str());
-    let opcode = if obj.is_ok() {
-        Opcodes::get(obj.as_ref().unwrap().t)
-    } else {
-        Err(String::new())
-    };
+	let opcode = if obj.is_ok() {
+		Opcodes::get(obj.as_ref().unwrap().t)
+	} else {
+		Err(String::new())
+	};
 
-    if obj.is_err() || opcode.is_err() {
-        Err(())
-    } else {
-        Ok(())
-    }
+	if obj.is_err() || opcode.is_err() {
+		println!("{:#?} {:#?}", obj, opcode);
+		Err(())
+	} else {
+		Ok(())
+	}
 }
 pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
@@ -90,8 +93,9 @@ pub async fn accept_connection(stream: TcpStream) {
 							.expect("couldn't close socket");
 						return;
 					}
-					
-                    let msg = from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str()).unwrap();
+
+					let msg =
+						from_str::<WebSocketMessage<WebSocketSession>>(&msg.as_str()).unwrap();
 
 					let mut session_token = String::from("");
 
