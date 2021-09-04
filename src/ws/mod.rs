@@ -34,7 +34,7 @@ where
 	};
 
 	if obj.is_err() || opcode.is_err() {
-		println!("{:#?} {:#?}", obj, opcode);
+		unsafe { println!("{:#?} {:#?}", obj, opcode) };
 		Err(())
 	} else {
 		Ok(())
@@ -44,19 +44,21 @@ pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
 
 	if addr.is_err() {
-		println!("Connection request has no Peer Address");
+		unsafe { println!("Connection request has no Peer Address") };
 		return;
 	}
 
 	let addr = addr.unwrap();
 
-	println!("New connect request (peer address: {})", addr);
+	unsafe {
+		println!("New connect request (peer address: {}) ", addr);
+	}
 
 	let ws_stream = tokio_tungstenite::accept_async(stream)
 		.await
 		.expect("Error during the websocket handshake occurred");
 
-	println!("{}: WebSocket connection succeeded", &addr);
+	unsafe { println!("{}: WebSocket connection succeeded", &addr) };
 
 	let (mut write, mut read) = ws_stream.split();
 
@@ -64,7 +66,7 @@ pub async fn accept_connection(stream: TcpStream) {
 		to_string(&dispatch::<Hello>(Some(hello()), 0, None, 0)).unwrap_or(String::from("null"));
 
 	if hello == "null" {
-		println!("{}: couldn't stringify hello", addr);
+		unsafe { println!("{}: couldn't stringify hello", addr) };
 		write
 			.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 			.await
@@ -86,7 +88,7 @@ pub async fn accept_connection(stream: TcpStream) {
 					msg = String::from(msg.trim());
 
 					if validate::<WebSocketSession>(&msg).is_err() {
-						println!("{}: invalid opening packet", addr);
+						unsafe { println!("{}: invalid opening packet", addr) };
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
@@ -99,24 +101,27 @@ pub async fn accept_connection(stream: TcpStream) {
 
 					let mut session_token = String::from("");
 
-					&session_token;
+					let _x = &session_token;
+					drop(_x);
 
 					if let Some(data) = msg.d {
 						session_token = data.session_token;
 					} else {
-						println!("{}: invalid opening packet", addr);
+						unsafe { println!("{}: invalid opening packet", addr) };
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
 							.expect("couldn't close socket");
 						return;
 					}
-					println!(
-						"{}: session token \"{}\" received, validating...",
-						&addr, &session_token
-					);
+					unsafe {
+						println!(
+							"{}: session token \"{}\" received, validating...",
+							&addr, &session_token
+						);
+					}
 
-					println!("{}: session token validated", &addr);
+					unsafe { println!("{}: session token validated", &addr) };
 
 					WebSocketClient::new((write, read), session_token, addr).await;
 				}

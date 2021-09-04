@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct HelloUser {
+pub struct GreetingsUser {
 	pub username: String,
 	pub nickname: String,
-	pub id: u32,
+	pub id: String,
 }

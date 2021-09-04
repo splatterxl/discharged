@@ -10,7 +10,12 @@ publish = false
 tokio-tungstenite = "*"
 serde_json = "*"
 futures-util = "*"
-mongodb = "2.0.0-beta.3"
+once_cell = "*"
+
+[dependencies.mongodb]
+version = "2.0.0-beta.3"
+default-features = false
+features = ['sync']
 
 [dependencies.tokio]
 version = "*"
