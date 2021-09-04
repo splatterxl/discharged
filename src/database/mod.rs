@@ -14,7 +14,7 @@ pub mod users;
 static DBCONN: OnceCell<Client> = OnceCell::new();
 
 pub fn connect() -> mongodb::error::Result<()> {
-	let client = Client::with_uri_str(&MONGO_URI)?;
+	let client = Client::with_uri_str(&*MONGO_URI)?;
 
 	client
 		.database("admin")
@@ -24,7 +24,7 @@ pub fn connect() -> mongodb::error::Result<()> {
 		println!("Successfully connected to MongoDB cluster");
 	}
 
-	DBCONN.set(client);
+	DBCONN.set(client).expect("Couldn't set Client to DBCONN");
 
 	Ok(())
 }

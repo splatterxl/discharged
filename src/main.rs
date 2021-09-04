@@ -1,26 +1,22 @@
 #![allow(unused_unsafe)]
 
+#[macro_use]
+extern crate lazy_static;
+
+mod database;
+mod types;
+mod util;
+mod ws;
+
 use std::{env, error::Error};
 
-use mongodb::{bson::doc, options::ClientOptions, Client};
 use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
 	// MongoDB
 
-	let client_options =
-		ClientOptions::parse(option_env!("MONGO").expect("MONGO environment variable not defined"))
-			.await?;
-
-	let client = Client::with_options(client_options)?;
-
-	client
-		.database("admin")
-		.run_command(doc! {"ping": 1}, None)
-		.await?;
-
-	unsafe { println!("Successfully connect to MongoDB cluster!") }
+	database::connect()?;
 
 	// WebSocket TCP Listener
 	let addr = env::args().nth(1).unwrap_or(String::from("127.0.0.1:8083"));
@@ -32,7 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	unsafe { println!("Listening on: {}", &addr) };
 
 	while let Ok((stream, _)) = listener.accept().await {
-		tokio::spawn(discharged::ws::accept_connection(stream));
+		tokio::spawn(ws::accept_connection(stream));
 	}
 
 	Ok(())
