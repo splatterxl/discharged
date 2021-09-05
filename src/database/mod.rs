@@ -1,13 +1,15 @@
 //! Shamelessly stolen from Revolt.chat's [`delta`] (backend) repository.
 //!
 //! [`delta`]: https://github.com/revoltchat/delta
+use std::error::Error;
+
 use mongodb::{
 	bson::doc,
 	sync::{Client, Collection, Database},
 };
 use once_cell::sync::OnceCell;
 
-use crate::util::variables::MONGO_URI;
+use crate::{types::database::User, util::variables::MONGO_URI};
 
 pub mod users;
 
@@ -25,6 +27,32 @@ pub fn connect() -> mongodb::error::Result<()> {
 	}
 
 	DBCONN.set(client).expect("Couldn't set Client to DBCONN");
+
+	Ok(())
+}
+
+pub fn setup() -> Result<(), Box<dyn Error>> {
+	// users
+	let admin = users::get("0")?;
+
+	match admin {
+		Some(_) => {
+			println!("Administrator user is already set, skipping setup");
+		}
+		None => {
+			println!("Administrator user not found, inserting...");
+
+			users::create(User {
+				id: String::from("0"),
+				username: String::from("Discharged"),
+				nickname: None,
+			})?;
+
+			println!("-> Success");
+		}
+	}
+
+	println!("User setup complete");
 
 	Ok(())
 }

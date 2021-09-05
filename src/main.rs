@@ -18,6 +18,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	database::connect()?;
 
+	database::setup()?;
+
 	// WebSocket TCP Listener
 	let addr = env::args().nth(1).unwrap_or(String::from("127.0.0.1:8083"));
 
