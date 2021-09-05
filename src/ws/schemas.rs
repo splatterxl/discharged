@@ -71,6 +71,7 @@ pub mod constants {
 		Authenticate,
 	}
 
+	#[allow(dead_code)]
 	impl Opcodes {
 		pub fn hello() -> u8 {
 			0

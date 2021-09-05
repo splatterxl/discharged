@@ -29,14 +29,6 @@ pub struct WebSocketClient {
 }
 
 impl WebSocketClient {
-	pub fn streams(
-		&self,
-	) -> (
-		&SplitSink<WebSocketStream<TcpStream>, Message>,
-		&SplitStream<WebSocketStream<TcpStream>>,
-	) {
-		(&self.write, &self.read)
-	}
 	pub async fn new(
 		streams: (
 			SplitSink<WebSocketStream<TcpStream>, Message>,
@@ -71,6 +63,7 @@ impl WebSocketClient {
 		write: &mut SplitSink<WebSocketStream<TcpStream>, Message>,
 		addr: &SocketAddr,
 	) -> Result<(), ()> {
+		// TODO: query user with session token / add pollable session data
 		let user = GreetingsUser {
 			username: String::from("Splatterxl"),
 			nickname: String::from(""),
