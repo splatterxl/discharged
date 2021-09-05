@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use tokio_tungstenite::tungstenite::protocol::{CloseFrame, frame::coding::CloseCode};
+use tokio_tungstenite::tungstenite::protocol::{frame::coding::CloseCode, CloseFrame};
 
 pub const DEFAULT_CLOSE_FRAME: CloseFrame = CloseFrame {
 	code: CloseCode::Library(1001),
@@ -8,6 +8,6 @@ pub const DEFAULT_CLOSE_FRAME: CloseFrame = CloseFrame {
 };
 
 pub const PARSE_ERROR: CloseFrame = CloseFrame {
-    code: CloseCode::Library(1002),
-    reason: Cow::Borrowed("Parse error, please @resume when ready")
+	code: CloseCode::Library(1002),
+	reason: Cow::Borrowed("Parse error, please @resume when ready"),
 };
