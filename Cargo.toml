@@ -20,7 +20,7 @@ features = ['sync']
 
 [dependencies.tokio]
 version = "*"
-features = ["full"]
+features = ["net"]
 
 [dependencies.serde]
 version = "*"
