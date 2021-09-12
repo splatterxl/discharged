@@ -10,17 +10,20 @@ mod ws;
 
 use std::{env, error::Error};
 
-use tokio::net::TcpListener;
+use database::start as start_database_daemon;
+use futures_util::join;
+use tokio::{net::TcpListener, spawn};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	// MongoDB
+	start_database_daemon().await?;
 
-	database::connect()?;
+	let ws_task = launch_ws().await;
 
-	database::setup()?;
+	Ok(())
+}
 
-	// WebSocket TCP Listener
+async fn launch_ws() {
 	let addr = env::args().nth(1).unwrap_or(String::from("127.0.0.1:8083"));
 
 	// Create the event loop and TCP listener we'll accept connections on.
@@ -32,6 +35,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	while let Ok((stream, _)) = listener.accept().await {
 		tokio::spawn(ws::accept_connection(stream));
 	}
-
-	Ok(())
 }

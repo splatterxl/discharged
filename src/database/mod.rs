@@ -5,18 +5,31 @@ use std::error::Error;
 
 use mongodb::{
 	bson::doc,
+	options::{ClientOptions, ResolverConfig},
 	sync::{Client, Collection, Database},
 };
-use once_cell::sync::OnceCell;
+use tokio::sync::OnceCell;
 
 use crate::{types::database::User, util::variables::MONGO_URI};
 
 pub mod users;
 
-static DBCONN: OnceCell<Client> = OnceCell::new();
+lazy_static! {
+	static ref DBCONN: OnceCell<Client> = OnceCell::new();
+}
 
-pub fn connect() -> mongodb::error::Result<()> {
-	let client = Client::with_uri_str(&*MONGO_URI)?;
+pub async fn start() -> Result<(), Box<dyn Error>> {
+	connect().await?;
+	setup()?;
+
+	Ok(())
+}
+
+pub async fn connect() -> mongodb::error::Result<()> {
+	let client = Client::with_options(ClientOptions::parse_with_resolver_config(
+		&*MONGO_URI,
+		ResolverConfig::cloudflare(),
+	)?)?;
 
 	client
 		.database("admin")
