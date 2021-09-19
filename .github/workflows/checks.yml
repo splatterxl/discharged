@@ -1,0 +1,35 @@
+name: Checks
+on: [push]
+
+jobs:
+  lint:
+    name: Lint code with Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rm -rf Cargo.lock
+      - name: Run Clippy
+        run: cargo clippy
+      - name: Commit Changed Files
+        run: |
+          git add .
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "actions@github.com"
+          git commit -m "chore: lockfile update [${GITHUB_SHA}]" \
+            --author="${GITHUB_ACTOR} <${GITHUB_ACTOR}@users.noreply.github.com>" \
+            || true
+          git push
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Format
+        run: cargo fmt
+      - name: Commit
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "actions@github.com"
+          git add .
+          git commit -m "chore: format files [${GITHUB_SHA}]" --author "$GITHUB_ACTOR <$GITHUB_ACTOR@users.noreply.github.com>" || true
+          git push
