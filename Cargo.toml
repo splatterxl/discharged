@@ -7,10 +7,10 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio-tungstenite = "*"
-serde_json = "*"
-futures-util = "*"
-lazy_static = "*"
+tokio-tungstenite = "0.15"
+serde_json = "1.0"
+futures-util = "0.3"
+lazy_static = "1.4"
 rocket = "0.5.0-rc.1"
 
 [dependencies.mongodb]
@@ -19,9 +19,9 @@ default-features = false
 features = ['sync']
 
 [dependencies.tokio]
-version = "*"
+version = "1.11"
 features = ["net"]
 
 [dependencies.serde]
-version = "*"
+version = "1.0"
 features = ["derive"]
