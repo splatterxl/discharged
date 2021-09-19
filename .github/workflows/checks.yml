@@ -5,6 +5,7 @@ jobs:
   lint:
     name: Lint code with Clippy
     runs-on: ubuntu-latest
+    needs: [fmt]
     steps:
       - uses: actions/checkout@v2
       - run: rm -rf Cargo.lock
