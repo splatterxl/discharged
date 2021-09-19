@@ -11,20 +11,20 @@ mod ws;
 use std::{env, error::Error};
 
 use database::start as start_database_daemon;
-use futures_util::join;
-use tokio::{net::TcpListener, spawn};
+
+use tokio::{net::TcpListener};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
 	start_database_daemon().await?;
 
-	let ws_task = launch_ws().await;
+	let _ws_task = launch_ws().await;
 
 	Ok(())
 }
 
 async fn launch_ws() {
-	let addr = env::args().nth(1).unwrap_or(String::from("127.0.0.1:8083"));
+	let addr = env::args().nth(1).unwrap_or_else(|| String::from("127.0.0.1:8083"));
 
 	// Create the event loop and TCP listener we'll accept connections on.
 	let try_socket = TcpListener::bind(&addr).await;

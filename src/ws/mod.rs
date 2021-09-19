@@ -22,11 +22,11 @@ pub mod client;
 pub mod errors;
 pub mod schemas;
 
-pub fn validate<'a, T>(message: &'a String) -> Result<(), ()>
+pub fn validate<'a, T>(message: &'a str) -> Result<(), ()>
 where
 	T: Deserialize<'a> + Debug,
 {
-	let obj = from_str::<'a, WebSocketMessage<T>>(message.as_str());
+	let obj = from_str::<'a, WebSocketMessage<T>>(message);
 	let opcode = if obj.is_ok() {
 		Opcodes::get(obj.as_ref().unwrap().t)
 	} else {
@@ -62,8 +62,8 @@ pub async fn accept_connection(stream: TcpStream) {
 
 	let (mut write, mut read) = ws_stream.split();
 
-	let hello =
-		to_string(&dispatch::<Hello>(Some(hello()), 0, None, 0)).unwrap_or(String::from("null"));
+	let hello = to_string(&dispatch::<Hello>(Some(hello()), 0, None, 0))
+		.unwrap_or_else(|_| String::from("null"));
 
 	if hello == "null" {
 		unsafe { println!("{}: couldn't stringify hello", addr) };
@@ -71,7 +71,6 @@ pub async fn accept_connection(stream: TcpStream) {
 			.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 			.await
 			.expect("couldn't close");
-		return;
 	} else {
 		write
 			.send(Message::Text(hello))
@@ -80,7 +79,7 @@ pub async fn accept_connection(stream: TcpStream) {
 
 		if let Some(Ok(mut msg)) = read.next().await {
 			if let Message::Binary(bin) = msg {
-				msg = Message::Text(String::from_utf8(bin).unwrap_or(String::from("")));
+				msg = Message::Text(String::from_utf8(bin).unwrap_or_else(|_| String::from("")));
 			}
 
 			match msg {
@@ -101,8 +100,7 @@ pub async fn accept_connection(stream: TcpStream) {
 
 					let mut session_token = String::from("");
 
-					let _x = &session_token;
-					drop(_x);
+					let _ = &session_token;
 
 					if let Some(data) = msg.d {
 						session_token = data.session_token;

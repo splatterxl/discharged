@@ -29,6 +29,7 @@ pub struct WebSocketClient {
 }
 
 impl WebSocketClient {
+	#[allow(clippy::new_ret_no_self)]
 	pub async fn new(
 		streams: (
 			SplitSink<WebSocketStream<TcpStream>, Message>,
@@ -39,7 +40,10 @@ impl WebSocketClient {
 	) -> String {
 		let (mut write, read) = streams;
 
-		if let Err(_) = WebSocketClient::greet(&mut write, &client_addr).await {
+		if WebSocketClient::greet(&mut write, &client_addr)
+			.await
+			.is_err()
+		{
 			write
 				.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 				.await
@@ -77,7 +81,7 @@ impl WebSocketClient {
 		let res = write
 			.send(Message::Text(
 				to_string(&dispatch::<Greetings>(Some(greetings(user)), 1, None, 1))
-					.unwrap_or(String::from("")),
+					.unwrap_or_else(|_| String::from("")),
 			))
 			.await;
 
@@ -123,7 +127,7 @@ impl WebSocketClient {
 					// why is this necessary? I don't know.
 					let _ = &string;
 
-					if let Err(_) = txt {
+					if txt.is_err() {
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
