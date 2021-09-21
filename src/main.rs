@@ -18,11 +18,7 @@ mod types;
 mod util;
 mod ws;
 
-use std::{
-	env,
-	error::Error,
-	process::Command,
-};
+use std::{env, error::Error, process::Command};
 
 use database::start as connect_and_setup;
 
@@ -30,16 +26,28 @@ use tokio::{join, net::TcpListener};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	println!("{}", format!("🚀 Starting Discharged version {} ({})...", 
-                            env!("CARGO_PKG_VERSION").bold().color(Color::Yellow),
-                            String::from_utf8(Command::new("git")
-                                .args(&["log", "-n", "1", "--format=%h"])
-                                .output()
-                                .expect("failed to get git commit hash: is git installed?").stdout).unwrap().trim_end().dim()));
+	println!(
+		"{}",
+		format!(
+			"🚀 Starting Discharged version {} ({})...",
+			env!("CARGO_PKG_VERSION").bold().color(Color::Yellow),
+			String::from_utf8(
+				Command::new("git")
+					.args(&["log", "-n", "1", "--format=%h"])
+					.output()
+					.expect("failed to get git commit hash: is git installed?")
+					.stdout
+			)
+			.unwrap()
+			.trim_end()
+			.dim()
+		)
+	);
 
 	ctrlc::set_handler(|| {
 		std::process::exit(130);
-	}).expect("couldn't set ctrlc handler");
+	})
+	.expect("couldn't set ctrlc handler");
 
 	connect_and_setup().await?;
 
