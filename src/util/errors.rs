@@ -2,20 +2,18 @@
 
 use std::{error::Error, fmt::Display, ptr::addr_of};
 
-#[derive(Debug)]
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
 pub enum Errors {
 	// Miscellanous
-	UnknownError {
-		action: String,
-		error: Box<dyn Error>,
-	},
+	UnknownError { action: String, error: String },
 
 	// Users
 	UserAlreadyExists,
 }
 
 impl Error for Errors {}
-
 impl Display for Errors {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(
@@ -30,3 +28,5 @@ impl Display for Errors {
 		)
 	}
 }
+
+pub type Result<T> = std::result::Result<T, Errors>;

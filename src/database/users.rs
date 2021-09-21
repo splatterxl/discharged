@@ -22,7 +22,7 @@ pub fn create(data: User) -> Result<(), Errors> {
 				if let Err(err) = get_collection::<User>("users").insert_one(&data, None) {
 					return Err(Errors::UnknownError {
 						action: String::from("create user"),
-						error: Box::new(err),
+						error: format!("{}", err),
 					});
 				}
 				println!("Created user {} (id {})", data.username, data.id);
@@ -31,7 +31,7 @@ pub fn create(data: User) -> Result<(), Errors> {
 		}
 		Err(err) => Err(Errors::UnknownError {
 			action: String::from("create"),
-			error: Box::new(err),
+			error: format!("{}", err),
 		}),
 	}
 }

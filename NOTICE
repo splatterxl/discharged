@@ -1,0 +1,9 @@
+This project contains code adapted from other projects. Licenses relating to those can be found here:
+
+---------
+
+Project contains code adapted from "process_uptime" (https://github.com/irexiz/process_uptime/; https://crates.io/crates/process_uptime), which is dual licensed under MIT/Apache-2.0: <https://github.com/irexiz/process_uptime/blob/master/LICENSE-MIT> and <https://github.com/irexiz/process_uptime/blob/master/LICENSE-APACHE>
+
+---------
+
+Project contains code adapted from REVOLT's backend repository (https://github.com/revoltchat/delta). Its license can be found at <https://github.com/revoltchat/delta/blob/master/LICENSE>.
