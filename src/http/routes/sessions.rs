@@ -11,7 +11,7 @@ use crate::{
 
 #[post("/", data = "<session_data>")]
 pub fn create_session(session_data: Json<SessionCreatePayload>) -> Result<String> {
-    let session_data = session_data.into_inner();
+	let session_data = session_data.into_inner();
 
 	println!("recieved session create request");
 
