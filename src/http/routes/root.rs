@@ -6,7 +6,7 @@ use crate::util::{
 };
 
 #[get("/")]
-pub fn ping() -> Result<String> {
+pub fn home() -> Result<String> {
 	match uptime() {
 		Err(err) => Err(Errors::UnknownError {
 			action: "query_uptime".to_string(),
@@ -17,5 +17,5 @@ pub fn ping() -> Result<String> {
 }
 
 pub fn all() -> Vec<Route> {
-	routes![ping]
+	routes![home]
 }

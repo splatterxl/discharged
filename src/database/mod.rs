@@ -3,6 +3,7 @@
 //! [`delta`]: https://github.com/revoltchat/delta
 use std::error::Error;
 
+use colorful::Colorful;
 use mongodb::{
 	bson::doc,
 	options::{ClientOptions, ResolverConfig},
@@ -10,7 +11,10 @@ use mongodb::{
 };
 use tokio::sync::OnceCell;
 
-use crate::{types::database::User, util::variables::MONGO_URI};
+use crate::{
+	types::{database::User, sessions::Session},
+	util::variables::MONGO_URI,
+};
 
 pub mod users;
 
@@ -44,16 +48,30 @@ pub async fn connect() -> mongodb::error::Result<()> {
 	Ok(())
 }
 
+macro_rules! setup_log {
+    () => (println!());
+    ($($arg:tt)*) => ({
+        println!("[{} -> {}] {}", "database".light_green(), "setup".dark_gray(), $($arg)*);
+    })
+}
+
+#[macro_export]
+macro_rules! success {
+	() => {
+		println!("{} success!", "->".blue())
+	};
+}
+
 pub fn setup() -> Result<(), Box<dyn Error>> {
 	// users
 	let admin = users::get("0")?;
 
 	match admin {
 		Some(_) => {
-			println!("Administrator user is already set, skipping setup");
+			setup_log!("administrator user is already set, skipping setup",);
 		}
 		None => {
-			println!("Administrator user not found, inserting...");
+			setup_log!("administrator user not found, inserting...",);
 
 			users::create(User {
 				id: String::from("0"),
@@ -61,11 +79,15 @@ pub fn setup() -> Result<(), Box<dyn Error>> {
 				nickname: None,
 			})?;
 
-			println!("-> Success");
+			success!();
 		}
 	}
 
-	println!("User setup complete");
+	setup_log!("removing all stale sessions");
+
+	let sessions = get_collection::<Session>("sessions").delete_many(doc! {}, None)?;
+
+	success!();
 
 	Ok(())
 }
