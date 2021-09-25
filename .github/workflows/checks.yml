@@ -10,7 +10,8 @@ jobs:
       - uses: actions/checkout@v2
       - run: rm -rf Cargo.lock
       - name: Run Clippy
-        run: cargo clippy
+        # set MONGO environment variable so env!() doesn't fail
+        run: MONGO= cargo clippy
       - name: Commit Changed Files
         run: |
           git add .
