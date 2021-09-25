@@ -85,7 +85,7 @@ pub fn setup() -> Result<(), Box<dyn Error>> {
 
 	setup_log!("removing all stale sessions");
 
-	let sessions = get_collection::<Session>("sessions").delete_many(doc! {}, None)?;
+	let _sessions = get_collection::<Session>("sessions").delete_many(doc! {}, None)?;
 
 	success!();
 
