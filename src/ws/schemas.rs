@@ -11,17 +11,16 @@ pub struct WebSocketMessage<T> {
 pub mod dispatches {
 	use serde::{Deserialize, Serialize};
 
-	use crate::types::ws::GreetingsUser;
+	use crate::types::{database::User, ws::GreetingsUser};
 
 	#[derive(Serialize, Deserialize, Debug)]
 	pub struct Hello {
 		pub exchange_interval: u16,
 	}
 
-	#[doc = "aaaaA"]
 	#[derive(Serialize, Deserialize, Debug)]
 	pub struct Greetings {
-		pub user: GreetingsUser,
+		pub user: User,
 	}
 }
 
@@ -36,7 +35,7 @@ pub mod gen {
 		WebSocketMessage,
 	};
 
-	use crate::types::ws::GreetingsUser;
+	use crate::types::{database::User, ws::GreetingsUser};
 
 	pub fn dispatch<T>(
 		data: Option<T>,
@@ -58,7 +57,7 @@ pub mod gen {
 		}
 	}
 
-	pub fn greetings(user: GreetingsUser) -> Greetings {
+	pub fn greetings(user: User) -> Greetings {
 		Greetings { user }
 	}
 }

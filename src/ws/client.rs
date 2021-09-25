@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use colorful::Colorful;
 use futures_util::{
 	stream::{SplitSink, SplitStream},
 	SinkExt, StreamExt,
@@ -11,7 +12,10 @@ use tokio_tungstenite::{
 	WebSocketStream,
 };
 
-use crate::{types::ws::GreetingsUser, ws::schemas::dispatches::Greetings};
+use crate::{
+	types::{database::User, sessions::Session, ws::GreetingsUser},
+	ws::schemas::dispatches::Greetings,
+};
 
 use super::{
 	errors::{DEFAULT_CLOSE_FRAME, PARSE_ERROR},
@@ -21,9 +25,7 @@ use super::{
 pub struct WebSocketClient {
 	pub write: SplitSink<WebSocketStream<TcpStream>, Message>,
 	pub read: SplitStream<WebSocketStream<TcpStream>>,
-	/// The authentication token of the session. Account tokens are **not** to
-	/// be used for WebSocket-initiated requests.
-	pub session_token: String,
+	pub session: Session,
 	/// The IP address and port of the client
 	pub client_addr: SocketAddr,
 }
@@ -35,12 +37,12 @@ impl WebSocketClient {
 			SplitSink<WebSocketStream<TcpStream>, Message>,
 			SplitStream<WebSocketStream<TcpStream>>,
 		),
-		session_token: String,
+		session: Session,
 		client_addr: SocketAddr,
-	) -> String {
+	) {
 		let (mut write, read) = streams;
 
-		if WebSocketClient::greet(&mut write, &client_addr)
+		if WebSocketClient::greet(&mut write, &client_addr, session.user())
 			.await
 			.is_err()
 		{
@@ -48,35 +50,30 @@ impl WebSocketClient {
 				.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 				.await
 				.unwrap_or(());
-			return session_token;
 		}
 
 		let client = Self {
 			write,
 			read,
-			session_token: session_token.clone(),
+			session,
 			client_addr,
 		};
 
 		tokio::spawn(WebSocketClient::handle(client));
-
-		session_token
 	}
 
-	pub async fn greet(
+	pub async fn greet<'a>(
 		write: &mut SplitSink<WebSocketStream<TcpStream>, Message>,
 		addr: &SocketAddr,
+		user: User,
 	) -> Result<(), ()> {
-		// TODO: query user with session token / add pollable session data
-		let user = GreetingsUser {
-			username: String::from("Splatterxl"),
-			nickname: String::from(""),
-			id: unsafe { format!("{}", 0i8) },
-		};
-
-		unsafe {
-			println!("{}: greet {} ({})", addr, &user.username, &user.id);
-		}
+		println!(
+			"[{}] {}: greet {} ({})",
+			"ws".blue(),
+			addr,
+			&user.username,
+			&user.id
+		);
 
 		let res = write
 			.send(Message::Text(
@@ -96,15 +93,21 @@ impl WebSocketClient {
 		let mut read = client.read;
 		let mut write = client.write;
 
-		unsafe { println!("{}: started listening for messages", &client.client_addr) };
+		println!(
+			"[{}] {}: started listening for messages",
+			"ws".blue(),
+			&client.client_addr
+		);
 
 		while let Some(Ok(msg)) = read.next().await {
 			match msg {
 				Message::Close(frame) => {
 					unsafe {
 						println!(
-							"{}: connection closed by peer: {:?}",
-							client.client_addr, frame
+							"[{}] {}: connection closed by peer: {:?}",
+							"ws".blue(),
+							client.client_addr,
+							frame
 						);
 					}
 					break;

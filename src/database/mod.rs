@@ -40,10 +40,14 @@ pub async fn connect() -> mongodb::error::Result<()> {
 		.run_command(doc! {"ping": 1}, None)?;
 
 	unsafe {
-		println!("Successfully connected to MongoDB cluster");
+		println!(
+			"[{}] {}",
+			"successfully connected to MongoDB cluster".green(),
+			"database".light_green()
+		);
 	}
 
-	DBCONN.set(client).expect("Couldn't set Client to DBCONN");
+	DBCONN.set(client).expect("Couldn't set DBCONN to client");
 
 	Ok(())
 }
@@ -51,7 +55,7 @@ pub async fn connect() -> mongodb::error::Result<()> {
 macro_rules! setup_log {
     () => (println!());
     ($($arg:tt)*) => ({
-        println!("[{} -> {}] {}", "database".light_green(), "setup".dark_gray(), $($arg)*);
+        println!("[{} -> {}] {}", "database".light_green(), "setup".dark_gray(), format!($($arg)*));
     })
 }
 

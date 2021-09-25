@@ -1,18 +1,24 @@
 use std::fmt::Debug;
 
+use colorful::Colorful;
 use futures_util::{SinkExt, StreamExt};
+use mongodb::bson::doc;
 use serde::Deserialize;
 use serde_json::{from_str, to_string};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::ws::{
-	client::WebSocketClient,
-	errors::{DEFAULT_CLOSE_FRAME, PARSE_ERROR},
-	schemas::{
-		dispatches::Hello,
-		gen::{dispatch, hello},
-		WebSocketMessage, WebSocketSession,
+use crate::{
+	database::get_collection,
+	types::sessions::Session,
+	ws::{
+		client::WebSocketClient,
+		errors::{DEFAULT_CLOSE_FRAME, INVALID_TOKEN, PARSE_ERROR},
+		schemas::{
+			dispatches::Hello,
+			gen::{dispatch, hello},
+			WebSocketMessage, WebSocketSession,
+		},
 	},
 };
 
@@ -44,21 +50,31 @@ pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
 
 	if addr.is_err() {
-		unsafe { println!("Connection request has no Peer Address") };
+		unsafe { println!("[{}] connection request has no peer address", "ws".blue()) };
 		return;
 	}
 
 	let addr = addr.unwrap();
 
 	unsafe {
-		println!("New connect request (peer address: {}) ", addr);
+		println!(
+			"[{}] new connect request (peer address: {})",
+			"ws".blue(),
+			addr
+		);
 	}
 
 	let ws_stream = tokio_tungstenite::accept_async(stream)
 		.await
 		.expect("Error during the websocket handshake occurred");
 
-	unsafe { println!("{}: WebSocket connection succeeded", &addr) };
+	unsafe {
+		println!(
+			"[{}] {}: WebSocket connection succeeded",
+			"ws".blue(),
+			&addr
+		)
+	};
 
 	let (mut write, mut read) = ws_stream.split();
 
@@ -66,7 +82,7 @@ pub async fn accept_connection(stream: TcpStream) {
 		.unwrap_or_else(|_| String::from("null"));
 
 	if hello == "null" {
-		unsafe { println!("{}: couldn't stringify hello", addr) };
+		unsafe { println!("[{}] {}: couldn't stringify hello", "ws".blue(), addr) };
 		write
 			.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 			.await
@@ -87,7 +103,7 @@ pub async fn accept_connection(stream: TcpStream) {
 					msg = String::from(msg.trim());
 
 					if validate::<WebSocketSession>(&msg).is_err() {
-						unsafe { println!("{}: invalid opening packet", addr) };
+						unsafe { println!("[{}] {}: invalid opening packet", "ws".blue(), addr) };
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
@@ -105,23 +121,46 @@ pub async fn accept_connection(stream: TcpStream) {
 					if let Some(data) = msg.d {
 						session_token = data.session_token;
 					} else {
-						unsafe { println!("{}: invalid opening packet", addr) };
+						unsafe { println!("[{}] {}: invalid opening packet", "ws".blue(), addr) };
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
 							.expect("couldn't close socket");
 						return;
 					}
-					unsafe {
-						println!(
-							"{}: session token \"{}\" received, validating...",
-							&addr, &session_token
-						);
-					}
 
-					unsafe { println!("{}: session token validated", &addr) };
+					println!(
+						"[{}] {}: session token \"{}\" received, validating...",
+						"ws".blue(),
+						&addr,
+						&session_token.clone().light_gray()
+					);
 
-					WebSocketClient::new((write, read), session_token, addr).await;
+					match get_collection::<Session>("sessions")
+						.find_one(doc! { "session_token": session_token.clone() }, None)
+					{
+						Ok(res) => match res {
+							Some(session) => {
+								println!("{}: session token validated", &addr);
+
+								WebSocketClient::new((write, read), session, addr).await;
+							}
+							None => {
+								write
+									.send(Message::Close(Some(INVALID_TOKEN)))
+									.await
+									.unwrap_or(());
+								println!("[{}] {}: invalid token", "ws".blue(), &addr)
+							}
+						},
+						Err(why) => {
+							write
+								.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
+								.await
+								.unwrap_or(());
+							println!("[{}] unknown error occurred while resolving session token {}: {:#?}", "ws".blue(), session_token.light_gray(), why)
+						}
+					};
 				}
 				_ => {
 					write

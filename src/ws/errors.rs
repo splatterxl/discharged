@@ -11,3 +11,8 @@ pub const PARSE_ERROR: CloseFrame = CloseFrame {
 	code: CloseCode::Library(1002),
 	reason: Cow::Borrowed("Parse error, please @resume when ready"),
 };
+
+pub const INVALID_TOKEN: CloseFrame = CloseFrame {
+	code: CloseCode::Library(1003),
+	reason: Cow::Borrowed("Invalid token"),
+};
