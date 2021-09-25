@@ -1,10 +1,8 @@
 pub mod database;
 pub mod ws;
 pub mod sessions {
-	
-	use serde::{Deserialize, Serialize};
 
-	
+	use serde::{Deserialize, Serialize};
 
 	use super::database::User;
 
