@@ -9,31 +9,33 @@ Discharged is a new, lightweight-ish (11MB) Discord alternative/clone/competitor
 
 ### Debug Mode
 
-| Dependencies | Size      |
-| ------------ | --------- |
-| colorful     | 909.99 KB |
-| ctrlc        | 174.47 KB |
-| lazy_static  | 23.58 KB  |
-| mongodb      | 57.43 MB  |
-| rocket       | 31.47 MB  |
-| serde        | 5.44 MB   |
-| serde_json   | 3.61 MB   |
-| tokio        | 21.87 MB  |
-| tungstenite  | 3.17 MB   |
+| Name        | Size      |
+| ----------- | --------- |
+| colorful    | 909.99 KB |
+| ctrlc       | 174.47 KB |
+| lazy_static | 23.58 KB  |
+| mongodb     | 57.43 MB  |
+| rand        | 2.13 MB   |
+| rocket      | 31.51 MB  |
+| serde       | 5.44 MB   |
+| serde_json  | 3.61 MB   |
+| tokio       | 21.87 MB  |
+| tungstenite | 3.17 MB   |
 
 ### Release Mode
 
-| Name        | Size      |
-| ----------- | --------- |
-| colorful    | 386.25 KB |
-| ctrlc       | 60.22 KB  |
-| lazy_static | 46.06 KB  |
-| mongodb     | 27.19 MB  |
-| rocket      | 10.3 MB   |
-| serde       | 10.79 MB  |
-| serde_json  | 1.85 MB   |
-| tokio       | 23.91 MB  |
-| tungstenite | 1.27 MB   |
+| Name        | Size     |
+| ----------- | -------- |
+| colorful    | 417 KB   |
+| ctrlc       | 60.22 KB |
+| lazy_static | 22.92 KB |
+| mongodb     | 27.19 MB |
+| rand        | 1.49 MB  |
+| rocket      | 10.3 MB  |
+| serde       | 5.67 MB  |
+| serde_json  | 1.76 MB  |
+| tokio       | 13.44 MB |
+| tungstenite | 1.49 MB  |
 
 ## Binary Size
 
@@ -41,7 +43,7 @@ Discharged is a new, lightweight-ish (11MB) Discord alternative/clone/competitor
 
 | Compile Mode | Size      |
 | ------------ | --------- |
-| debug        | 120.93 MB |
+| debug        | 122.03 MB |
 | release      | 11.12 MB  |
 
 ## Installation
