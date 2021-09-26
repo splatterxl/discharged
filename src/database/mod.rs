@@ -41,7 +41,7 @@ pub async fn connect() -> mongodb::error::Result<()> {
 
 	println!(
 		"[{} -> connection] {}",
-		"database".light_green()
+		"database".light_green(),
 		"successfully connected to MongoDB cluster",
 	);
 
