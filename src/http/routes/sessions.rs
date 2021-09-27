@@ -6,7 +6,9 @@ use rocket::{serde::json::Json, Route};
 use crate::{
 	database::{get_collection, users},
 	success,
-	types::sessions::{DeviceType, Session, SessionCreatePayload, SessionDevice},
+	types::sessions::{
+		DeviceType, Session, SessionCreatePayload, SessionCreateResponse, SessionDevice,
+	},
 	util::errors::{Errors, Result},
 };
 
@@ -16,6 +18,7 @@ macro_rules! create_log {
     })
 }
 
+#[allow(clippy::unnecessary_unwrap)]
 #[post("/", data = "<session_data>")]
 pub fn create_session(session_data: Json<SessionCreatePayload>) -> Result<String> {
 	let session_data = session_data.into_inner();
@@ -80,7 +83,13 @@ pub fn create_session(session_data: Json<SessionCreatePayload>) -> Result<String
 				}
 				Ok(_) => {
 					success!();
-					Ok(json!(session_result).to_string())
+					Ok(json!(SessionCreateResponse {
+						user,
+						friendly_name: session_result.friendly_name,
+						device: session_result.device,
+						session_token: session_result.session_token
+					})
+					.to_string())
 				}
 			}
 		}

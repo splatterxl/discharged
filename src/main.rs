@@ -1,6 +1,3 @@
-// rust-analyzer moment
-#![allow(unused_unsafe)]
-
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -65,7 +62,7 @@ async fn launch_ws() {
 	let try_socket = TcpListener::bind(&addr).await;
 	let listener = try_socket.expect("Failed to bind");
 
-	unsafe { println!("[{}] listening on: {}", "ws".color(Color::LightBlue), &addr) };
+	println!("[{}] listening on: {}", "ws".color(Color::LightBlue), &addr);
 
 	while let Ok((stream, _)) = listener.accept().await {
 		tokio::spawn(ws::accept_connection(stream));

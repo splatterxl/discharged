@@ -13,7 +13,7 @@ use tokio_tungstenite::{
 };
 
 use crate::{
-	types::{database::User, sessions::Session, ws::GreetingsUser},
+	types::{database::User, sessions::Session},
 	ws::schemas::dispatches::Greetings,
 };
 
@@ -102,14 +102,12 @@ impl WebSocketClient {
 		while let Some(Ok(msg)) = read.next().await {
 			match msg {
 				Message::Close(frame) => {
-					unsafe {
 						println!(
 							"[{}] {}: connection closed by peer: {:?}",
 							"ws".blue(),
 							client.client_addr,
 							frame
 						);
-					}
 					break;
 				}
 				Message::Text(m) => {
@@ -159,6 +157,7 @@ impl WebSocketClient {
 		write: &mut SplitSink<WebSocketStream<TcpStream>, Message>,
 		message: String,
 	) -> Result<(), Error> {
-		write.send(Message::Text(message)).await
+        // TODO: handle opcodes n stufff
+        write.send(Message::Text(message)).await
 	}
 }

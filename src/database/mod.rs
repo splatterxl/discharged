@@ -40,9 +40,8 @@ pub async fn connect() -> mongodb::error::Result<()> {
 		.run_command(doc! {"ping": 1}, None)?;
 
 	println!(
-		"[{} -> connection] {}",
+		"[{} -> connection] successfully connected to MongoDB cluster",
 		"database".light_green(),
-		"successfully connected to MongoDB cluster",
 	);
 
 	DBCONN.set(client).expect("Couldn't set DBCONN to client");

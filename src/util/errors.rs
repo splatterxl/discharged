@@ -9,7 +9,6 @@ use serde::Serialize;
 pub enum Errors {
 	// Miscellanous
 	UnknownError { action: String, error: String },
-	BadRequest,
 
 	// Users
 	UserAlreadyExists,
@@ -25,11 +24,10 @@ impl Display for Errors {
 			f,
 			"Error {}\n\tat: {}",
 			match &self {
-				Errors::UnknownError { action, error } =>
+				Self::UnknownError { action, error } =>
 					format!("could not {}: {}", action, error),
-				Errors::UserAlreadyExists => String::from("user already exists"),
-				Errors::UserDoesNotExist => String::from("user does not exist"),
-				Errors::BadRequest => String::from("bad request"),
+				Self::UserAlreadyExists => String::from("user already exists"),
+				Self::UserDoesNotExist => String::from("user does not exist"),
 			},
 			addr_of!(self) as usize
 		)

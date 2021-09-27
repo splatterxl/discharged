@@ -11,7 +11,7 @@ pub struct WebSocketMessage<T> {
 pub mod dispatches {
 	use serde::{Deserialize, Serialize};
 
-	use crate::types::{database::User, ws::GreetingsUser};
+	use crate::types::database::User;
 
 	#[derive(Serialize, Deserialize, Debug)]
 	pub struct Hello {
@@ -35,7 +35,7 @@ pub mod gen {
 		WebSocketMessage,
 	};
 
-	use crate::types::{database::User, ws::GreetingsUser};
+	use crate::types::database::User;
 
 	pub fn dispatch<T>(
 		data: Option<T>,
@@ -91,12 +91,10 @@ pub mod constants {
 				0 => Ok(Self::Hello),
 				1 => Ok(Self::Greetings),
 				2 => Ok(Self::Authenticate),
-				_ => unsafe {
-					Err(format!(
-						"Opcodes::get() called with an invalid number: {}",
-						num
-					))
-				},
+				_ => Err(format!(
+					"Opcodes::get() called with an invalid number: {}",
+					num
+				)),
 			};
 		}
 	}

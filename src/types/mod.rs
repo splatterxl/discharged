@@ -27,6 +27,7 @@ pub mod sessions {
 		}
 	}
 
+    #[derive(Serialize, Deserialize)]
 	pub struct SessionCreateResponse {
 		pub user: User,
 		pub friendly_name: String,

@@ -19,10 +19,9 @@ pub fn mount(rocket: Rocket<Build>) -> Rocket<Build> {
 impl<'r, 'o: 'r> Responder<'r, 'o> for Errors {
 	fn respond_to(self, _request: &'r Request<'_>) -> Result<'o> {
 		let status = match &self {
-			&Self::UnknownError { .. } => Status::InternalServerError,
-			&Self::UserAlreadyExists => Status::Conflict,
-			&Self::UserDoesNotExist => Status::BadRequest,
-			&Self::BadRequest => Status::BadRequest,
+			Self::UnknownError { .. } => Status::InternalServerError,
+			Self::UserAlreadyExists => Status::Conflict,
+			Self::UserDoesNotExist => Status::BadRequest,
 		};
 
 		let string = json!(self).to_string();

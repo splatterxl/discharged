@@ -40,7 +40,7 @@ where
 	};
 
 	if obj.is_err() || opcode.is_err() {
-		unsafe { println!("{:#?} {:#?}", obj, opcode) };
+		println!("{:#?} {:#?}", obj, opcode);
 		Err(())
 	} else {
 		Ok(())
@@ -50,31 +50,31 @@ pub async fn accept_connection(stream: TcpStream) {
 	let addr = stream.peer_addr();
 
 	if addr.is_err() {
-		unsafe { println!("[{}] connection request has no peer address", "ws".blue()) };
+		println!("[{}] connection request has no peer address", "ws".blue());
 		return;
 	}
 
 	let addr = addr.unwrap();
 
-	unsafe {
+	
 		println!(
 			"[{}] new connect request (peer address: {})",
 			"ws".blue(),
 			addr
 		);
-	}
+	
 
 	let ws_stream = tokio_tungstenite::accept_async(stream)
 		.await
 		.expect("Error during the websocket handshake occurred");
 
-	unsafe {
+
 		println!(
 			"[{}] {}: WebSocket connection succeeded",
 			"ws".blue(),
 			&addr
 		)
-	};
+	;
 
 	let (mut write, mut read) = ws_stream.split();
 
@@ -82,7 +82,7 @@ pub async fn accept_connection(stream: TcpStream) {
 		.unwrap_or_else(|_| String::from("null"));
 
 	if hello == "null" {
-		unsafe { println!("[{}] {}: couldn't stringify hello", "ws".blue(), addr) };
+		println!("[{}] {}: couldn't stringify hello", "ws".blue(), addr) ;
 		write
 			.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 			.await
@@ -103,7 +103,7 @@ pub async fn accept_connection(stream: TcpStream) {
 					msg = String::from(msg.trim());
 
 					if validate::<WebSocketSession>(&msg).is_err() {
-						unsafe { println!("[{}] {}: invalid opening packet", "ws".blue(), addr) };
+						 println!("[{}] {}: invalid opening packet", "ws".blue(), addr);
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
@@ -121,7 +121,7 @@ pub async fn accept_connection(stream: TcpStream) {
 					if let Some(data) = msg.d {
 						session_token = data.session_token;
 					} else {
-						unsafe { println!("[{}] {}: invalid opening packet", "ws".blue(), addr) };
+						println!("[{}] {}: invalid opening packet", "ws".blue(), addr);
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await
@@ -141,7 +141,7 @@ pub async fn accept_connection(stream: TcpStream) {
 					{
 						Ok(res) => match res {
 							Some(session) => {
-								println!("{}: session token validated", &addr);
+								println!("[{}] {}: session token validated", "ws".blue(), &addr);
 
 								WebSocketClient::new((write, read), session, addr).await;
 							}
