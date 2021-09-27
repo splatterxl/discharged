@@ -56,25 +56,21 @@ pub async fn accept_connection(stream: TcpStream) {
 
 	let addr = addr.unwrap();
 
-	
-		println!(
-			"[{}] new connect request (peer address: {})",
-			"ws".blue(),
-			addr
-		);
-	
+	println!(
+		"[{}] new connect request (peer address: {})",
+		"ws".blue(),
+		addr
+	);
 
 	let ws_stream = tokio_tungstenite::accept_async(stream)
 		.await
 		.expect("Error during the websocket handshake occurred");
 
-
-		println!(
-			"[{}] {}: WebSocket connection succeeded",
-			"ws".blue(),
-			&addr
-		)
-	;
+	println!(
+		"[{}] {}: WebSocket connection succeeded",
+		"ws".blue(),
+		&addr
+	);
 
 	let (mut write, mut read) = ws_stream.split();
 
@@ -82,7 +78,7 @@ pub async fn accept_connection(stream: TcpStream) {
 		.unwrap_or_else(|_| String::from("null"));
 
 	if hello == "null" {
-		println!("[{}] {}: couldn't stringify hello", "ws".blue(), addr) ;
+		println!("[{}] {}: couldn't stringify hello", "ws".blue(), addr);
 		write
 			.send(Message::Close(Some(DEFAULT_CLOSE_FRAME)))
 			.await
@@ -103,7 +99,7 @@ pub async fn accept_connection(stream: TcpStream) {
 					msg = String::from(msg.trim());
 
 					if validate::<WebSocketSession>(&msg).is_err() {
-						 println!("[{}] {}: invalid opening packet", "ws".blue(), addr);
+						println!("[{}] {}: invalid opening packet", "ws".blue(), addr);
 						write
 							.send(Message::Close(Some(PARSE_ERROR)))
 							.await

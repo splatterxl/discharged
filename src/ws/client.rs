@@ -102,12 +102,12 @@ impl WebSocketClient {
 		while let Some(Ok(msg)) = read.next().await {
 			match msg {
 				Message::Close(frame) => {
-						println!(
-							"[{}] {}: connection closed by peer: {:?}",
-							"ws".blue(),
-							client.client_addr,
-							frame
-						);
+					println!(
+						"[{}] {}: connection closed by peer: {:?}",
+						"ws".blue(),
+						client.client_addr,
+						frame
+					);
 					break;
 				}
 				Message::Text(m) => {
@@ -157,7 +157,7 @@ impl WebSocketClient {
 		write: &mut SplitSink<WebSocketStream<TcpStream>, Message>,
 		message: String,
 	) -> Result<(), Error> {
-        // TODO: handle opcodes n stufff
-        write.send(Message::Text(message)).await
+		// TODO: handle opcodes n stufff
+		write.send(Message::Text(message)).await
 	}
 }

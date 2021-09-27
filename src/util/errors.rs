@@ -24,8 +24,7 @@ impl Display for Errors {
 			f,
 			"Error {}\n\tat: {}",
 			match &self {
-				Self::UnknownError { action, error } =>
-					format!("could not {}: {}", action, error),
+				Self::UnknownError { action, error } => format!("could not {}: {}", action, error),
 				Self::UserAlreadyExists => String::from("user already exists"),
 				Self::UserDoesNotExist => String::from("user does not exist"),
 			},
