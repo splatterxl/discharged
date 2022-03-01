@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [fmt]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: rm -rf Cargo.lock
       - name: Run Clippy
         # set MONGO environment variable so env!() doesn't fail
@@ -26,7 +26,7 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Format
         run: cargo fmt
       - name: Commit
