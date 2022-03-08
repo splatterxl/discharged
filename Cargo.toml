@@ -36,7 +36,7 @@ default-features = false
 features = ['sync']
 
 [dependencies.tokio]
-version = "1.11"
+version = "1.17"
 features = ["net"]
 
 [dependencies.serde]
